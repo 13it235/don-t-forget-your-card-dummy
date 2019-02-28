@@ -1,12 +1,20 @@
 var listOfCards = [];
+var cvvLength = 0;
+var cardNoLength = 0;
+var cardInfo = JSON.parse(localStorage.getItem('cardInfo'));
+var cardNumber = 0;
+var cardType = '';
+updateValues = false;
 
-function item(cardNo, date, cvv, type) {
+//To create an item object 
+function Item(cardNo, date, cvv, type) {
     this.cardNumber = cardNo;
     this.expiryDate = date;
     this.cvv = cvv;
     this.type = type
 };
 
+//Using this to check the type of card used
 function cardApi() {
     const Http = new XMLHttpRequest();
     const url = 'http://api.myjson.com/bins/fvzpp';
@@ -21,6 +29,7 @@ function cardApi() {
 }
 
 window.onload = function () {
+    document.getElementById("cardSubmit").innerHTML = "Submit";
     if (localStorage.getItem('cardInfo') == undefined || localStorage.getItem('cardInfo') == null)
         cardApi();
     console.log("card list", localStorage.getItem("cardList"));
@@ -34,19 +43,6 @@ window.onload = function () {
         document.getElementById("cardItem").style = "display : none"
     }
 }
-
-var item = {
-    cardNumber: '',
-    expiryDate: new Date,
-    cvv: '',
-    type: ''
-}
-
-var cvvLength = 0;
-var cardNoLength = 0;
-var cardInfo = JSON.parse(localStorage.getItem('cardInfo'));
-var cardNumber = 0;
-var cardType = '';
 
 function handleCardNo() {
     checkCardType(document.getElementById('cardNo').value);
@@ -78,25 +74,19 @@ function submit() {
             document.getElementById("error").innerHTML = "This a required field"
         }
         else {
-            var item = {
-                cardNumber: '',
-                expiryDate: new Date,
-                cvv: '',
-                type: ''
-            }
-            item.cardNumber = document.getElementById('cardNo').value;
-            item.expiryDate = document.getElementById('eDate').value;
-            item.cvv = document.getElementById('cvv').value;
-            item.type = cardType;
+            var item = new Item(document.getElementById('cardNo').value, document.getElementById('eDate').value,
+                document.getElementById('cvv').value, cardType)
+            if(updateValues)
+                deleteCard(item.cvv);
             listOfCards.push(item);
             if (listOfCards.length == 1)
                 document.getElementById("cardItem").style = "display : block";
             localStorage.setItem("cardList", JSON.stringify(listOfCards));
+            addListItem(item);
             document.getElementById('cardNo').value = '';
             document.getElementById('eDate').value = '';
             document.getElementById('cvv').value = '';
-            document.getElementById("type").innerHTML = '';
-            addListItem(item);
+            document.getElementById("type").innerHTML = '';        
         }
     }
     else {
@@ -150,7 +140,7 @@ function addListItem(item) {
 
 function deleteCard(cvv) {
     listOfCards = listOfCards.filter(card => {
-        card.cvv != cvv;
+        return card.cvv != cvv;
     });
     localStorage.setItem("cardList", JSON.stringify(listOfCards));
 
@@ -172,7 +162,15 @@ function deleteCard(cvv) {
 
 function updateCard(cvv) {
     console.log("in update card");
-
+    var cards = listOfCards.filter(card => {
+        return card.cvv == cvv;
+    });
+    document.getElementById('cardNo').value = cards[0].cardNumber;
+    document.getElementById('eDate').value = cards[0].expiryDate;
+    document.getElementById('cvv').value = cards[0].cvv;
+    document.getElementById("type").innerHTML = cards[0].type;
+    document.getElementById("cardSubmit").innerHTML = "Update";
+    updateValues = true
 }
 
 /**
